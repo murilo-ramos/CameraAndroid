@@ -17,12 +17,16 @@ public class CameraActivity extends Activity implements Camera.PictureCallback {
     private Camera camera;
     private CameraPreview cameraPreview;
 
+    private int backCameraID;
+    private int frontCameraID;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-        this.startCamera();
+        this.setCamerasIDs();
+        this.startCamera(this.backCameraID);
     }
 
     @Override
@@ -32,30 +36,30 @@ public class CameraActivity extends Activity implements Camera.PictureCallback {
     }
 
     public void onClick(View v) {
-        this.cameraPreview.stop();
         this.camera.takePicture(null, null, this);
     }
 
-    private void startCamera() {
-        this.camera = Camera.open(getBackCamera());
-        this.cameraPreview = new CameraPreview(this, this.camera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(this.cameraPreview);
-    }
-
-    private int getBackCamera() {
-        int cameraId = -1;
-        // Search for the front facing camera
+    private void setCamerasIDs() {
         int numberOfCameras = Camera.getNumberOfCameras();
         for (int i = 0; i < numberOfCameras; i++) {
             Camera.CameraInfo info = new Camera.CameraInfo();
             Camera.getCameraInfo(i, info);
-            if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                cameraId = i;
-                break;
+
+            switch (info.facing) {
+                case Camera.CameraInfo.CAMERA_FACING_FRONT:
+                    this.frontCameraID = i;
+                    break;
+                case Camera.CameraInfo.CAMERA_FACING_BACK:
+                    this.backCameraID = i;
+                    break;
             }
         }
-        return cameraId;
     }
 
+    private void startCamera(int cameraID) {
+        this.camera = Camera.open(cameraID);
+        this.cameraPreview = new CameraPreview(this, this.camera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(this.cameraPreview);
+    }
 }
